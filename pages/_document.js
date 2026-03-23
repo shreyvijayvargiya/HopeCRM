@@ -8,10 +8,10 @@ export default function Document() {
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<meta
 					name="description"
-					content="HopeCRM Real Estate CRM — Manage leads, listings, pipeline, and grow your real estate business."
+					content="PostContent Content scheduler — Manage leads, listings, pipeline, and grow your real estate business."
 				/>
 				<meta name="theme-color" content="#09090b" />
-				<title>HopeCRM — Real Estate CRM</title>
+				<title>PostContent — Content scheduler</title>
 				<link rel="icon" href="/favicon.ico" />
 				<link rel="preconnect" href="https://fonts.googleapis.com" />
 				<link

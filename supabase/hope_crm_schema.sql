@@ -1,4 +1,4 @@
--- HopeCRM / Nonprofit CRM — Initial schema (mirrors data.js)
+-- PostContent / Nonprofit CRM — Initial schema (mirrors data.js)
 -- Apply: supabase db reset (local) or run in Dashboard SQL Editor (hosted)
 
 -- Donors (from DONORS)

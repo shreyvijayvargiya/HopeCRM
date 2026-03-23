@@ -1,5 +1,5 @@
-import DashboardPage from "../app/DashboardPage";
+import ContentOS from "../app";
 
 export default function Home() {
-	return <DashboardPage />;
+	return <ContentOS />;
 }

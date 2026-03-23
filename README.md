@@ -1,4 +1,4 @@
-# HopeCRM — Nonprofit / Charity CRM Template
+# PostContent — Nonprofit / Charity CRM Template
 
 A modern CRM for nonprofits and charities built with Next.js. Manage donors, grants, campaigns, events, volunteers, tasks, reports, and communications from one dashboard. No database or backend required — customize everything by editing a single root data file.
 
@@ -13,32 +13,32 @@ Open [http://localhost:3000](http://localhost:3000) to view the CRM.
 
 ## Customize Your CRM
 
-All data lives in **`data.js`** at the project root. Edit this single file to create your own HopeCRM — no store, Redux, or API needed. Each page imports from this data via `app/admin/data.js`, which re-exports from `data.js` only.
+All data lives in **`data.js`** at the project root. Edit this single file to create your own PostContent — no store, Redux, or API needed. Each page imports from this data via `app/admin/data.js`, which re-exports from `data.js` only.
 
 ### Data Structure
 
-| Section | Description |
-|--------|-------------|
-| `THEMES` | Dark/light color palettes |
-| `STAFF_COLOR` | Staff code → color for avatars |
-| `DONORS` | Donor/contact records (type, tier, stage, LTV, etc.) |
-| `GRANTS` | Grant pipeline (funder, amount, deadline, stage, program) |
-| `CAMPAIGNS` | Fundraising campaigns (goal, raised, donors, status) |
-| `EVENTS` | Events (galas, webinars, board meetings, etc.) |
-| `VOLUNTEERS` | Volunteer roster, hours, skills, availability |
-| `TASKS_DATA` | To-do items with due date, priority, staff, category |
-| `EMAIL_TEMPLATES` | Email templates (category, opens, sent, subject) |
-| `SEQUENCES` | Automated email sequences |
-| `raisedOverTime` | Monthly fundraising chart data |
-| `retentionData` | Donor retention by year |
-| `sourceData` | Revenue by source (pie/bar charts) |
-| `volunteerHours` | Volunteer hours by month |
-| `STAGE_META` / `TIER_META` / `TYPE_META` | Donor stage/tier/type colors |
-| `PRIORITY_META` / `GRANT_STAGE_META` / `EVENT_TYPE_COLOR` | UI metadata |
-| `NAV` | Sidebar navigation items |
-| `PAGE_TITLES` / `PAGE_SUB` | Page titles and subtitles |
-| `STAFF_LIST` / `INTEGRATIONS` / `STAFF_PERF` | Settings and reports data |
-| `UPCOMING_DEADLINES` / `NOTIFICATIONS` | Dashboard and header data |
+| Section                                                   | Description                                               |
+| --------------------------------------------------------- | --------------------------------------------------------- |
+| `THEMES`                                                  | Dark/light color palettes                                 |
+| `STAFF_COLOR`                                             | Staff code → color for avatars                            |
+| `DONORS`                                                  | Donor/contact records (type, tier, stage, LTV, etc.)      |
+| `GRANTS`                                                  | Grant pipeline (funder, amount, deadline, stage, program) |
+| `CAMPAIGNS`                                               | Fundraising campaigns (goal, raised, donors, status)      |
+| `EVENTS`                                                  | Events (galas, webinars, board meetings, etc.)            |
+| `VOLUNTEERS`                                              | Volunteer roster, hours, skills, availability             |
+| `TASKS_DATA`                                              | To-do items with due date, priority, staff, category      |
+| `EMAIL_TEMPLATES`                                         | Email templates (category, opens, sent, subject)          |
+| `SEQUENCES`                                               | Automated email sequences                                 |
+| `raisedOverTime`                                          | Monthly fundraising chart data                            |
+| `retentionData`                                           | Donor retention by year                                   |
+| `sourceData`                                              | Revenue by source (pie/bar charts)                        |
+| `volunteerHours`                                          | Volunteer hours by month                                  |
+| `STAGE_META` / `TIER_META` / `TYPE_META`                  | Donor stage/tier/type colors                              |
+| `PRIORITY_META` / `GRANT_STAGE_META` / `EVENT_TYPE_COLOR` | UI metadata                                               |
+| `NAV`                                                     | Sidebar navigation items                                  |
+| `PAGE_TITLES` / `PAGE_SUB`                                | Page titles and subtitles                                 |
+| `STAFF_LIST` / `INTEGRATIONS` / `STAFF_PERF`              | Settings and reports data                                 |
+| `UPCOMING_DEADLINES` / `NOTIFICATIONS`                    | Dashboard and header data                                 |
 
 ### Example: Add a New Donor
 
@@ -104,7 +104,7 @@ Set `OPENROUTER_API_KEY` in `.env.local` to use the AI feature.
 
 ## Layout
 
-The app uses a single **Layout** (`app/admin/Layout.jsx`): sidebar on the left (HopeCRM branding, nav from `data.js`, annual goal widget, dark/light toggle), main content on the right with header (breadcrumb, search, notifications, AI button, settings, user avatar). The AI chatbot sidebar is included and unchanged.
+The app uses a single **Layout** (`app/admin/Layout.jsx`): sidebar on the left (PostContent branding, nav from `data.js`, annual goal widget, dark/light toggle), main content on the right with header (breadcrumb, search, notifications, AI button, settings, user avatar). The AI chatbot sidebar is included and unchanged.
 
 ## Tech Stack
 
