@@ -12,6 +12,13 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+	PlatformComposeFields,
+	getTypeOptionsForPlatform,
+	normalizeTypeForPlatform,
+	getCharLimitForPlatform,
+	getPlatformComposeDefaults,
+} from "./components/PlatformComposeFields";
 import { Search } from "lucide-react";
 
 // ─── ICONS ────────────────────────────────────────────────────────────────────
@@ -58,8 +65,7 @@ const FbIcon = mkIcon(
 );
 const EmojiIcon =
 	(emoji, s = 13) =>
-	() =>
-		<span style={{ fontSize: s, lineHeight: 1 }}>{emoji}</span>;
+	() => <span style={{ fontSize: s, lineHeight: 1 }}>{emoji}</span>;
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 const PLATFORMS = {
@@ -81,26 +87,116 @@ const PLATFORMS = {
 		Icon: PiIcon,
 	},
 	facebook: { label: "Facebook", hex: "#1877F2", bg: "#eef4ff", Icon: FbIcon },
-	reddit: { label: "Reddit", hex: "#FF4500", bg: "#fff4ef", Icon: EmojiIcon("👽") },
-	discord: { label: "Discord", hex: "#5865F2", bg: "#eef0ff", Icon: EmojiIcon("💬") },
-	telegram: { label: "Telegram", hex: "#229ED9", bg: "#eef8ff", Icon: EmojiIcon("✈️") },
-	snapchat: { label: "Snapchat", hex: "#FFFC00", bg: "#fffef0", Icon: EmojiIcon("👻") },
-	whatsapp: { label: "WhatsApp", hex: "#25D366", bg: "#eefdf4", Icon: EmojiIcon("🟢") },
-	medium: { label: "Medium", hex: "#12100E", bg: "#f3f3f3", Icon: EmojiIcon("✍️") },
-	substack: { label: "Substack", hex: "#FF6719", bg: "#fff4ed", Icon: EmojiIcon("📮") },
-	quora: { label: "Quora", hex: "#B92B27", bg: "#fff1f1", Icon: EmojiIcon("❓") },
-	twitch: { label: "Twitch", hex: "#9146FF", bg: "#f5efff", Icon: EmojiIcon("🎮") },
+	reddit: {
+		label: "Reddit",
+		hex: "#FF4500",
+		bg: "#fff4ef",
+		Icon: EmojiIcon("👽"),
+	},
+	discord: {
+		label: "Discord",
+		hex: "#5865F2",
+		bg: "#eef0ff",
+		Icon: EmojiIcon("💬"),
+	},
+	telegram: {
+		label: "Telegram",
+		hex: "#229ED9",
+		bg: "#eef8ff",
+		Icon: EmojiIcon("✈️"),
+	},
+	snapchat: {
+		label: "Snapchat",
+		hex: "#FFFC00",
+		bg: "#fffef0",
+		Icon: EmojiIcon("👻"),
+	},
+	whatsapp: {
+		label: "WhatsApp",
+		hex: "#25D366",
+		bg: "#eefdf4",
+		Icon: EmojiIcon("🟢"),
+	},
+	medium: {
+		label: "Medium",
+		hex: "#12100E",
+		bg: "#f3f3f3",
+		Icon: EmojiIcon("✍️"),
+	},
+	substack: {
+		label: "Substack",
+		hex: "#FF6719",
+		bg: "#fff4ed",
+		Icon: EmojiIcon("📮"),
+	},
+	quora: {
+		label: "Quora",
+		hex: "#B92B27",
+		bg: "#fff1f1",
+		Icon: EmojiIcon("❓"),
+	},
+	twitch: {
+		label: "Twitch",
+		hex: "#9146FF",
+		bg: "#f5efff",
+		Icon: EmojiIcon("🎮"),
+	},
 	kick: { label: "Kick", hex: "#53FC18", bg: "#f3ffec", Icon: EmojiIcon("🟩") },
-	vimeo: { label: "Vimeo", hex: "#1AB7EA", bg: "#effbff", Icon: EmojiIcon("🎬") },
-	dribbble: { label: "Dribbble", hex: "#EA4C89", bg: "#fff0f6", Icon: EmojiIcon("🏀") },
-	behance: { label: "Behance", hex: "#1769FF", bg: "#eef4ff", Icon: EmojiIcon("🎨") },
-	github: { label: "GitHub", hex: "#181717", bg: "#f3f3f3", Icon: EmojiIcon("🐙") },
-	producthunt: { label: "Product Hunt", hex: "#DA552F", bg: "#fff3ef", Icon: EmojiIcon("🚀") },
-	slack: { label: "Slack", hex: "#4A154B", bg: "#f9f0fa", Icon: EmojiIcon("💼") },
-	wechat: { label: "WeChat", hex: "#07C160", bg: "#effdf5", Icon: EmojiIcon("💚") },
+	vimeo: {
+		label: "Vimeo",
+		hex: "#1AB7EA",
+		bg: "#effbff",
+		Icon: EmojiIcon("🎬"),
+	},
+	dribbble: {
+		label: "Dribbble",
+		hex: "#EA4C89",
+		bg: "#fff0f6",
+		Icon: EmojiIcon("🏀"),
+	},
+	behance: {
+		label: "Behance",
+		hex: "#1769FF",
+		bg: "#eef4ff",
+		Icon: EmojiIcon("🎨"),
+	},
+	github: {
+		label: "GitHub",
+		hex: "#181717",
+		bg: "#f3f3f3",
+		Icon: EmojiIcon("🐙"),
+	},
+	producthunt: {
+		label: "Product Hunt",
+		hex: "#DA552F",
+		bg: "#fff3ef",
+		Icon: EmojiIcon("🚀"),
+	},
+	slack: {
+		label: "Slack",
+		hex: "#4A154B",
+		bg: "#f9f0fa",
+		Icon: EmojiIcon("💼"),
+	},
+	wechat: {
+		label: "WeChat",
+		hex: "#07C160",
+		bg: "#effdf5",
+		Icon: EmojiIcon("💚"),
+	},
 	line: { label: "LINE", hex: "#06C755", bg: "#effdf4", Icon: EmojiIcon("💬") },
-	clubhouse: { label: "Clubhouse", hex: "#F1EFE4", bg: "#f7f6ef", Icon: EmojiIcon("🎙️") },
-	mastodon: { label: "Mastodon", hex: "#6364FF", bg: "#efefff", Icon: EmojiIcon("🐘") },
+	clubhouse: {
+		label: "Clubhouse",
+		hex: "#F1EFE4",
+		bg: "#f7f6ef",
+		Icon: EmojiIcon("🎙️"),
+	},
+	mastodon: {
+		label: "Mastodon",
+		hex: "#6364FF",
+		bg: "#efefff",
+		Icon: EmojiIcon("🐘"),
+	},
 };
 const PL = Object.entries(PLATFORMS).map(([id, p]) => ({ id, ...p }));
 const PLATFORM_INTEGRATION_INFO = {
@@ -514,9 +610,26 @@ function Spinner({ color = "#e8590c" }) {
 	);
 }
 
+function AssigneeChip({ member, small = false }) {
+	if (!member) return null;
+	return (
+		<span
+			className={`inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 text-gray-500 ${
+				small ? "px-1.5 py-0.5 text-[9px]" : "px-2 py-0.5 text-[10px]"
+			}`}
+		>
+			<span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-100 text-blue-600 font-semibold">
+				{member.avatar}
+			</span>
+			<span className="max-w-[90px] truncate">{member.name}</span>
+		</span>
+	);
+}
+
 // ─── CONTENT CARD ─────────────────────────────────────────────────────────────
-function ContentCard({ item, onClick, compact = false }) {
+function ContentCard({ item, onClick, compact = false, team = [], bulkMode = false, isSelected = false }) {
 	const p = PLATFORMS[item.platform] || {};
+	const assignee = team.find((m) => m.id === item.assigneeId);
 	return (
 		<motion.div
 			layout
@@ -526,8 +639,15 @@ function ContentCard({ item, onClick, compact = false }) {
 			whileHover={{ y: -2 }}
 			onClick={() => onClick(item)}
 			style={{ borderLeft: `3px solid ${p.hex || "#ccc"}` }}
-			className="bg-white border border-gray-100 rounded-xl flex gap-3 p-3 cursor-pointer hover:border-gray-200 hover:shadow-sm transition-all"
+			className={`bg-white border rounded-xl flex gap-3 p-3 cursor-pointer hover:shadow-sm transition-all ${isSelected ? "border-orange-300 bg-orange-50/40 shadow-sm" : "border-gray-100 hover:border-gray-200"}`}
 		>
+			{bulkMode && (
+				<div className="flex items-center shrink-0">
+					<div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${isSelected ? "bg-orange-500 border-orange-500" : "border-gray-300 bg-white"}`}>
+						{isSelected && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
+					</div>
+				</div>
+			)}
 			<div
 				className="w-10 h-10 rounded-lg flex items-center justify-center text-xl shrink-0"
 				style={{ background: p.bg || "#f5f3ef" }}
@@ -556,6 +676,11 @@ function ContentCard({ item, onClick, compact = false }) {
 						{item.type}
 					</span>
 				</div>
+				{assignee && (
+					<div className="mt-1">
+						<AssigneeChip member={assignee} />
+					</div>
+				)}
 				{!compact && item.tags.length > 0 && (
 					<div className="flex gap-1 flex-wrap mt-1">
 						{item.tags.map((t) => (
@@ -574,14 +699,12 @@ function ContentCard({ item, onClick, compact = false }) {
 }
 
 // ─── CALENDAR ─────────────────────────────────────────────────────────────────
-function CalendarView({ items, onSelect }) {
+function CalendarView({ items, onSelect, team = [] }) {
 	const today = new Date();
-	const [cur, setCur] = useState({
-		y: today.getFullYear(),
-		m: today.getMonth(),
-	});
-	const dim = new Date(cur.y, cur.m + 1, 0).getDate();
-	const fd = new Date(cur.y, cur.m, 1).getDay();
+	const todayStr = today.toISOString().split("T")[0];
+	const [cur, setCur] = useState({ y: today.getFullYear(), m: today.getMonth(), w: 0 });
+	const [mode, setMode] = useState("month");
+
 	const byDay = useMemo(() => {
 		const map = {};
 		items.forEach((i) => {
@@ -590,93 +713,195 @@ function CalendarView({ items, onSelect }) {
 		});
 		return map;
 	}, [items]);
-	const prev = () =>
-		setCur((c) => (c.m === 0 ? { y: c.y - 1, m: 11 } : { ...c, m: c.m - 1 }));
-	const next = () =>
-		setCur((c) => (c.m === 11 ? { y: c.y + 1, m: 0 } : { ...c, m: c.m + 1 }));
-	const cells = [
-		...Array(fd).fill(null),
-		...Array.from({ length: dim }, (_, i) => i + 1),
-	];
+
+	// ─ month helpers ─
+	const dim = new Date(cur.y, cur.m + 1, 0).getDate();
+	const fd = new Date(cur.y, cur.m, 1).getDay();
+	const cells = [...Array(fd).fill(null), ...Array.from({ length: dim }, (_, i) => i + 1)];
+
+	// ─ week helpers ─
+	const weekStart = useMemo(() => {
+		const d = new Date(today);
+		d.setDate(d.getDate() - d.getDay() + cur.w * 7);
+		d.setHours(0, 0, 0, 0);
+		return d;
+	}, [cur.w]);
+	const weekDays = useMemo(() =>
+		Array.from({ length: 7 }, (_, i) => {
+			const d = new Date(weekStart);
+			d.setDate(d.getDate() + i);
+			return d;
+		}), [weekStart]);
+	const WORK_HOURS = Array.from({ length: 15 }, (_, i) => i + 7);
+
+	const prevNav = () => {
+		if (mode === "month") setCur((c) => c.m === 0 ? { ...c, y: c.y - 1, m: 11 } : { ...c, m: c.m - 1 });
+		else if (mode === "week") setCur((c) => ({ ...c, w: c.w - 1 }));
+		else setCur((c) => ({ ...c, y: c.y - 1 }));
+	};
+	const nextNav = () => {
+		if (mode === "month") setCur((c) => c.m === 11 ? { ...c, y: c.y + 1, m: 0 } : { ...c, m: c.m + 1 });
+		else if (mode === "week") setCur((c) => ({ ...c, w: c.w + 1 }));
+		else setCur((c) => ({ ...c, y: c.y + 1 }));
+	};
+	const weekEndDate = new Date(weekStart.getTime() + 6 * 86400000);
+	const navTitle =
+		mode === "month" ? `${MONTHS[cur.m]} ${cur.y}`
+		: mode === "week" ? `${MONTHS[weekStart.getMonth()]} ${weekStart.getDate()} – ${MONTHS[weekEndDate.getMonth()]} ${weekEndDate.getDate()}, ${weekStart.getFullYear()}`
+		: `${cur.y}`;
 
 	return (
 		<div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
-			<div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-				<button
-					onClick={prev}
-					className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors text-base"
-				>
-					‹
-				</button>
-				<h2 className="text-[15px] font-bold tracking-tight">
-					{MONTHS[cur.m]} {cur.y}
-				</h2>
-				<button
-					onClick={next}
-					className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors text-base"
-				>
-					›
-				</button>
-			</div>
-			<div className="grid grid-cols-7 border-b border-gray-100">
-				{DAYS.map((d) => (
-					<div
-						key={d}
-						className="text-center py-2 text-[9px] font-mono uppercase tracking-widest text-gray-400"
-					>
-						{d}
-					</div>
-				))}
-			</div>
-			<div className="grid grid-cols-7 gap-px bg-gray-100">
-				{cells.map((day, i) => {
-					if (!day)
-						return <div key={`e${i}`} className="bg-gray-50 min-h-[80px]" />;
-					const ds = `${cur.y}-${String(cur.m + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-					const di = byDay[ds] || [];
-					const isT =
-						day === today.getDate() &&
-						cur.m === today.getMonth() &&
-						cur.y === today.getFullYear();
-					return (
-						<div key={day} className="bg-white p-1.5 min-h-[80px]">
-							<div
-								className={`inline-flex items-center justify-center w-5 h-5 text-[11px] font-semibold mb-1 ${isT ? "bg-orange-500 text-white rounded-full" : di.length ? "text-gray-800" : "text-gray-300"}`}
+			{/* Header */}
+			<div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 gap-3">
+				<button onClick={prevNav} className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors text-base shrink-0">‹</button>
+				<h2 className="text-[15px] font-bold tracking-tight flex-1 text-center">{navTitle}</h2>
+				<div className="flex items-center gap-2 shrink-0">
+					<div className="flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
+						{["week", "month", "year"].map((m) => (
+							<button
+								key={m}
+								onClick={() => setMode(m)}
+								className={`px-2.5 py-1 text-[10px] font-semibold rounded-md capitalize transition-all ${mode === m ? "bg-white text-gray-800 shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
 							>
-								{day}
-							</div>
-							<div className="flex flex-col gap-px">
-								{di.slice(0, 3).map((it) => (
-									<div
-										key={it.id}
-										onClick={() => onSelect(it)}
-										className="flex items-center gap-1 bg-gray-50 rounded px-1 py-0.5 cursor-pointer hover:bg-gray-100 overflow-hidden"
-										style={{
-											borderLeft: `2px solid ${PLATFORMS[it.platform]?.hex || "#ccc"}`,
-										}}
-									>
-										<span className="text-[9px] shrink-0">{it.thumb}</span>
-										<span className="text-[9px] font-semibold text-gray-500 truncate">
-											{it.title}
-										</span>
-									</div>
-								))}
-								{di.length > 3 && (
-									<span className="text-[8px] font-mono text-gray-400">
-										+{di.length - 3}
-									</span>
-								)}
-							</div>
-						</div>
-					);
-				})}
+								{m}
+							</button>
+						))}
+					</div>
+					<button onClick={nextNav} className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors text-base">›</button>
+				</div>
 			</div>
+
+			{/* ─ MONTH VIEW ─ */}
+			{mode === "month" && (
+				<>
+					<div className="grid grid-cols-7 border-b border-gray-100">
+						{DAYS.map((d) => (
+							<div key={d} className="text-center py-2 text-[9px] font-mono uppercase tracking-widest text-gray-400">{d}</div>
+						))}
+					</div>
+					<div className="grid grid-cols-7 gap-px bg-gray-100">
+						{cells.map((day, i) => {
+							if (!day) return <div key={`e${i}`} className="bg-gray-50 min-h-[80px]" />;
+							const ds = `${cur.y}-${String(cur.m + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+							const di = byDay[ds] || [];
+							const isT = day === today.getDate() && cur.m === today.getMonth() && cur.y === today.getFullYear();
+							return (
+								<div key={day} className="bg-white p-1.5 min-h-[80px]">
+									<div className={`inline-flex items-center justify-center w-5 h-5 text-[11px] font-semibold mb-1 ${isT ? "bg-orange-500 text-white rounded-full" : di.length ? "text-gray-800" : "text-gray-300"}`}>{day}</div>
+									<div className="flex flex-col gap-px">
+										{di.slice(0, 3).map((it) => {
+											const assignee = team.find((m) => m.id === it.assigneeId);
+											return (
+												<div
+													key={it.id}
+													onClick={() => onSelect(it)}
+													className="flex items-center gap-1 bg-gray-50 rounded px-1 py-2 cursor-pointer hover:bg-gray-100 overflow-hidden"
+													style={{ borderLeft: `2px solid ${PLATFORMS[it.platform]?.hex || "#ccc"}` }}
+												>
+													<span className="text-[9px] shrink-0">{it.thumb}</span>
+													<span className="text-[9px] font-semibold text-gray-500 truncate">{it.title}</span>
+													{assignee && <span className="text-[8px] shrink-0 text-blue-500">{assignee.avatar}</span>}
+												</div>
+											);
+										})}
+										{di.length > 3 && <span className="text-[8px] font-mono text-gray-400">+{di.length - 3}</span>}
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				</>
+			)}
+
+			{/* ─ WEEK VIEW ─ */}
+			{mode === "week" && (
+				<div className="overflow-x-auto">
+					<div className="grid border-b border-gray-100" style={{ gridTemplateColumns: "52px repeat(7, 1fr)" }}>
+						<div className="py-2" />
+						{weekDays.map((d) => {
+							const ds = d.toISOString().split("T")[0];
+							const isT = ds === todayStr;
+							const posts = byDay[ds]?.length || 0;
+							return (
+								<div key={ds} className={`py-2 text-center border-l border-gray-100 ${isT ? "bg-orange-50" : ""}`}>
+									<div className={`text-[9px] font-mono uppercase tracking-widest ${isT ? "text-orange-500" : "text-gray-400"}`}>{DAYS[d.getDay()]}</div>
+									<div className={`text-[16px] font-bold ${isT ? "text-orange-500" : "text-gray-700"}`}>{d.getDate()}</div>
+									{posts > 0 && <div className="text-[8px] font-mono text-gray-400">{posts} post{posts > 1 ? "s" : ""}</div>}
+								</div>
+							);
+						})}
+					</div>
+					<div className="max-h-[520px] overflow-y-auto">
+						{WORK_HOURS.map((hour) => (
+							<div key={hour} className="grid border-b border-gray-50 hover:bg-gray-50/20 transition-colors" style={{ gridTemplateColumns: "52px repeat(7, 1fr)", minHeight: 52 }}>
+								<div className="py-2 pr-2 text-right text-[9px] font-mono text-gray-300 shrink-0">{String(hour).padStart(2, "0")}:00</div>
+								{weekDays.map((d) => {
+									const ds = d.toISOString().split("T")[0];
+									const isT = ds === todayStr;
+									const postsAtHour = (byDay[ds] || []).filter((it) => {
+										const h = parseInt((it.time || "0:00").split(":")[0]);
+										return h === hour;
+									});
+									return (
+										<div key={ds} className={`border-l border-gray-100 p-0.5 ${isT ? "bg-orange-50/30" : ""}`}>
+											{postsAtHour.map((it) => (
+												<div
+													key={it.id}
+													onClick={() => onSelect(it)}
+													className="flex items-center gap-1 rounded px-1.5 py-1 cursor-pointer hover:opacity-80 transition-opacity mb-0.5"
+													style={{ background: `${PLATFORMS[it.platform]?.hex || "#ccc"}18`, borderLeft: `2px solid ${PLATFORMS[it.platform]?.hex || "#ccc"}` }}
+												>
+													<span className="text-[9px] shrink-0">{it.thumb}</span>
+													<span className="text-[9px] font-semibold truncate" style={{ color: PLATFORMS[it.platform]?.hex || "#555" }}>{it.title}</span>
+												</div>
+											))}
+										</div>
+									);
+								})}
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
+			{/* ─ YEAR VIEW ─ */}
+			{mode === "year" && (
+				<div className="p-4 grid grid-cols-4 gap-3">
+					{Array.from({ length: 12 }, (_, mi) => {
+						const mDim = new Date(cur.y, mi + 1, 0).getDate();
+						const mFd = new Date(cur.y, mi, 1).getDay();
+						const isCurrentMonth = mi === today.getMonth() && cur.y === today.getFullYear();
+						return (
+							<div key={mi} className={`border rounded-xl overflow-hidden ${isCurrentMonth ? "border-orange-200 bg-orange-50/20" : "border-gray-100"}`}>
+								<div className={`text-center py-2 text-[11px] font-semibold ${isCurrentMonth ? "text-orange-500" : "text-gray-500"}`}>{MONTHS[mi].slice(0, 3)} {cur.y}</div>
+								<div className="grid grid-cols-7 px-1.5 pb-2 gap-px">
+									{[...Array(mFd).fill(null), ...Array.from({ length: mDim }, (_, i) => i + 1)].map((d, idx) => {
+										if (!d) return <div key={`e${idx}`} />;
+										const ds = `${cur.y}-${String(mi + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+										const posts = byDay[ds] || [];
+										const isT = d === today.getDate() && mi === today.getMonth() && cur.y === today.getFullYear();
+										return (
+											<div key={d} className="relative flex items-center justify-center" style={{ height: 18 }} title={posts.length ? `${posts.length} posts` : undefined}>
+												<span className={`text-[7px] font-mono ${isT ? "text-orange-500 font-bold" : posts.length ? "text-gray-600" : "text-gray-300"}`}>{d}</span>
+												{posts.length > 0 && (
+													<span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full" style={{ background: PLATFORMS[posts[0].platform]?.hex || "#ccc" }} />
+												)}
+											</div>
+										);
+									})}
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			)}
 		</div>
 	);
 }
 
 // ─── KANBAN ───────────────────────────────────────────────────────────────────
-function KanbanView({ items, onSelect, onStatusChange }) {
+function KanbanView({ items, onSelect, onStatusChange, team = [] }) {
 	const [dragging, setDragging] = useState(null);
 	const [over, setOver] = useState(null);
 	const cols = useMemo(() => {
@@ -721,6 +946,7 @@ function KanbanView({ items, onSelect, onStatusChange }) {
 						<AnimatePresence>
 							{cols[col].map((it) => {
 								const p = PLATFORMS[it.platform] || {};
+								const assignee = team.find((m) => m.id === it.assigneeId);
 								return (
 									<motion.div
 										key={it.id}
@@ -756,6 +982,11 @@ function KanbanView({ items, onSelect, onStatusChange }) {
 												{it.type}
 											</span>
 										</div>
+										{assignee && (
+											<div className="mt-1.5">
+												<AssigneeChip member={assignee} small />
+											</div>
+										)}
 									</motion.div>
 								);
 							})}
@@ -773,8 +1004,9 @@ function KanbanView({ items, onSelect, onStatusChange }) {
 }
 
 // ─── COMPOSER ─────────────────────────────────────────────────────────────────
-function ComposerView({ onSave, activeProject }) {
+function ComposerView({ onSave, activeProject, team = [] }) {
 	const proj = PROJECTS.find((p) => p.id === activeProject) || PROJECTS[0];
+	const activeMembers = team.filter((m) => m.active);
 	const [form, setForm] = useState({
 		title: "",
 		caption: "",
@@ -786,9 +1018,27 @@ function ComposerView({ onSave, activeProject }) {
 		tags: [],
 		thumb: "✏️",
 		tagInput: "",
+		platformData: getPlatformComposeDefaults("instagram", "post"),
+		assigneeId: activeMembers[0]?.id || null,
 	});
 	const [saved, setSaved] = useState(false);
 	const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+	const setPlatformData = (k, v) =>
+		setForm((f) => ({
+			...f,
+			platformData: { ...(f.platformData || {}), [k]: v },
+		}));
+
+	useEffect(() => {
+		const normalized = normalizeTypeForPlatform(form.platform, form.type);
+		if (normalized !== form.type) {
+			setForm((f) => ({
+				...f,
+				type: normalized,
+				platformData: getPlatformComposeDefaults(f.platform, normalized),
+			}));
+		}
+	}, [form.platform, form.type]);
 	const addTag = () => {
 		if (form.tagInput.trim()) {
 			set("tags", [...form.tags, form.tagInput.trim()]);
@@ -801,7 +1051,10 @@ function ComposerView({ onSave, activeProject }) {
 			form.tags.filter((_, j) => j !== i),
 		);
 	const p = PLATFORMS[form.platform] || {};
-	const lim = CHAR_LIMITS[form.platform] || 500;
+	const lim =
+		getCharLimitForPlatform(form.platform, form.type) ||
+		CHAR_LIMITS[form.platform] ||
+		500;
 	const pct = Math.min(form.caption.length / lim, 1);
 	const barColor = pct > 0.9 ? "#ef4444" : p.hex || "#e8590c";
 	const handleSave = () => {
@@ -835,19 +1088,37 @@ function ComposerView({ onSave, activeProject }) {
 						[
 							"Type",
 							"type",
-							[
-								["post", "Post"],
-								["reel", "Reel"],
-								["short", "Short"],
-								["story", "Story"],
-							],
+							getTypeOptionsForPlatform(form.platform).map((o) => [
+								o.id,
+								o.label,
+							]),
 						],
 					].map(([lbl, key, opts]) => (
 						<label key={key} className="flex flex-col gap-1">
 							<MotionDropdown
 								label={lbl}
 								value={form[key]}
-								onChange={(v) => set(key, v)}
+								onChange={(v) => {
+									if (key === "platform") {
+										const nextType = normalizeTypeForPlatform(v, form.type);
+										setForm((f) => ({
+											...f,
+											platform: v,
+											type: nextType,
+											platformData: getPlatformComposeDefaults(v, nextType),
+										}));
+										return;
+									}
+									if (key === "type") {
+										setForm((f) => ({
+											...f,
+											type: v,
+											platformData: getPlatformComposeDefaults(f.platform, v),
+										}));
+										return;
+									}
+									set(key, v);
+								}}
 								options={opts.map(([v, l]) => ({ value: v, label: l }))}
 							/>
 						</label>
@@ -912,6 +1183,13 @@ function ComposerView({ onSave, activeProject }) {
 						</div>
 					)}
 				</div>
+				<PlatformComposeFields
+					platform={form.platform}
+					type={form.type}
+					values={form.platformData || {}}
+					onChange={setPlatformData}
+					DropdownComponent={MotionDropdown}
+				/>
 
 				<div className="grid grid-cols-3 gap-3">
 					<label className="flex flex-col gap-1">
@@ -925,6 +1203,19 @@ function ComposerView({ onSave, activeProject }) {
 							}))}
 						/>
 					</label>
+					<label className="flex flex-col gap-1">
+						<MotionDropdown
+							label="Assign To"
+							value={form.assigneeId}
+							onChange={(v) => set("assigneeId", Number(v))}
+							options={activeMembers.map((m) => ({
+								value: m.id,
+								label: `${m.avatar} ${m.name}`,
+							}))}
+						/>
+					</label>
+				</div>
+				<div className="grid grid-cols-2 gap-3">
 					<label className="flex flex-col gap-1">
 						<span className="text-[9.5px] font-mono uppercase tracking-widest text-gray-400">
 							Date
@@ -1121,19 +1412,21 @@ function IdeasView({ onUseIdea }) {
 					open in Composer.
 				</p>
 
-				<div className="flex gap-2 mb-4">
-					<Search className="w-4 h-4 text-gray-400" />
-					<input
-						className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-[13px] outline-none focus:border-orange-400 transition-colors"
-						placeholder="e.g. nextjs, react, saas, scraping..."
-						value={kw}
-						onChange={(e) => setKw(e.target.value)}
-						onKeyDown={(e) => e.key === "Enter" && generate()}
-					/>
+				<div className="space-y-2 mb-4">
+					<div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg w-full">
+						<Search className="w-4 h-4 text-gray-400" />
+						<input
+							className="flex-1 bg-transparent outline-none text-[13px] text-gray-700 placeholder-gray-400"
+							placeholder="e.g. nextjs, react, saas, scraping..."
+							value={kw}
+							onChange={(e) => setKw(e.target.value)}
+							onKeyDown={(e) => e.key === "Enter" && generate()}
+						/>
+					</div>
 					<button
 						onClick={() => generate()}
 						disabled={loading}
-						className="bg-orange-500 text-white text-[12px] font-semibold px-4 rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 whitespace-nowrap"
+						className="bg-orange-500 px-4 py-2 text-white text-[12px] font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 whitespace-nowrap"
 					>
 						Generate ↗
 					</button>
@@ -1279,8 +1572,7 @@ function IdeasView({ onUseIdea }) {
 }
 
 // ─── TEAMS ────────────────────────────────────────────────────────────────────
-function TeamsView() {
-	const [team, setTeam] = useState(SEED_TEAM);
+function TeamsView({ team, setTeam }) {
 	const [showInvite, setShowInvite] = useState(false);
 	const [email, setEmail] = useState("");
 	const [role, setRole] = useState("Writer");
@@ -1479,7 +1771,7 @@ function TeamsView() {
 }
 
 // ─── EDIT MODAL ───────────────────────────────────────────────────────────────
-function EditModal({ item, onClose, onSave, onDelete, projects }) {
+function EditModal({ item, onClose, onSave, onDelete, projects, team = [] }) {
 	const [form, setForm] = useState({ ...item, tags: [...(item.tags || [])] });
 	const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 	const p = PLATFORMS[form.platform] || {};
@@ -1572,6 +1864,13 @@ function EditModal({ item, onClose, onSave, onDelete, projects }) {
 								"project",
 								projects.map((p) => [p.id, `${p.emoji} ${p.name}`]),
 							],
+							[
+								"Assign To",
+								"assigneeId",
+								team
+									.filter((m) => m.active)
+									.map((m) => [m.id, `${m.avatar} ${m.name}`]),
+							],
 							["Date", "date", "date"],
 							["Time", "time", "time"],
 						].map(([lbl, key, opts]) => (
@@ -1582,7 +1881,14 @@ function EditModal({ item, onClose, onSave, onDelete, projects }) {
 								{Array.isArray(opts) ? (
 									<MotionDropdown
 										value={form[key]}
-										onChange={(v) => set(key, key === "project" ? Number(v) : v)}
+										onChange={(v) =>
+											set(
+												key,
+												key === "project" || key === "assigneeId"
+													? Number(v)
+													: v,
+											)
+										}
 										options={opts.map(([v, l]) => ({ value: v, label: l }))}
 									/>
 								) : (
@@ -1904,7 +2210,9 @@ function AddProjectModal({ onClose, onCreate }) {
 				className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden"
 			>
 				<div className="p-5 border-b border-gray-100 flex items-center justify-between">
-					<h3 className="text-[14px] font-bold tracking-tight">Add New Project</h3>
+					<h3 className="text-[14px] font-bold tracking-tight">
+						Add New Project
+					</h3>
 					<button
 						onClick={onClose}
 						className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-lg text-gray-500 hover:bg-gray-200 transition-colors text-sm"
@@ -2001,7 +2309,9 @@ function UserAccountModal({ onClose }) {
 							className="w-12 h-12 rounded-full object-cover"
 						/>
 						<div>
-							<p className="text-[13px] font-semibold text-gray-800">Alex Morgan</p>
+							<p className="text-[13px] font-semibold text-gray-800">
+								Alex Morgan
+							</p>
 							<p className="text-[11px] text-gray-500">alex@contentos.app</p>
 						</div>
 					</div>
@@ -2035,107 +2345,150 @@ function UserAccountModal({ onClose }) {
 	);
 }
 
-function SearchModal({ items, projects, onClose, onPick }) {
+function CommandPalette({ items, projects, team, onClose, onPick, onNavigate }) {
 	const [query, setQuery] = useState("");
-	const result = useMemo(() => {
+	const inputRef = useRef(null);
+
+	const COMMANDS = [
+		{ icon: "🏠", label: "Go to Home", shortcut: "H", action: () => { onNavigate("home"); onClose(); } },
+		{ icon: "📅", label: "Go to Calendar", shortcut: "C", action: () => { onNavigate("calendar"); onClose(); } },
+		{ icon: "☰", label: "Go to List view", shortcut: "L", action: () => { onNavigate("list"); onClose(); } },
+		{ icon: "⬛", label: "Go to Kanban", shortcut: "K", action: () => { onNavigate("kanban"); onClose(); } },
+		{ icon: "✏️", label: "Compose new post", shortcut: "N", action: () => { onNavigate("compose"); onClose(); } },
+		{ icon: "💡", label: "Ideas Generator", shortcut: "I", action: () => { onNavigate("ideas"); onClose(); } },
+		{ icon: "📊", label: "Analytics", shortcut: "A", action: () => { onNavigate("analytics"); onClose(); } },
+		{ icon: "👥", label: "Team & Roles", shortcut: "T", action: () => { onNavigate("teams"); onClose(); } },
+	];
+
+	const filteredCommands = useMemo(() => {
 		const q = query.trim().toLowerCase();
-		const sorted = [...items].sort(
-			(a, b) => new Date(b.date + " " + b.time) - new Date(a.date + " " + a.time),
-		);
-		if (!q) return sorted;
+		if (!q) return COMMANDS;
+		return COMMANDS.filter((c) => c.label.toLowerCase().includes(q));
+	}, [query]);
+
+	const contentResults = useMemo(() => {
+		const q = query.trim().toLowerCase();
+		if (!q) return [];
+		const sorted = [...items].sort((a, b) => new Date(b.date + " " + b.time) - new Date(a.date + " " + a.time));
 		return sorted.filter((i) => {
 			const pf = PLATFORMS[i.platform]?.label || i.platform;
 			const pr = projects.find((p) => p.id === i.project)?.name || "";
+			const as = team.find((m) => m.id === i.assigneeId)?.name || "";
 			return (
 				i.title?.toLowerCase().includes(q) ||
 				i.caption?.toLowerCase().includes(q) ||
 				pf.toLowerCase().includes(q) ||
 				STATUSES[i.status]?.label?.toLowerCase().includes(q) ||
 				pr.toLowerCase().includes(q) ||
+				as.toLowerCase().includes(q) ||
 				(i.tags || []).join(" ").toLowerCase().includes(q)
 			);
-		});
-	}, [items, projects, query]);
+		}).slice(0, 8);
+	}, [items, projects, team, query]);
+
+	useEffect(() => { inputRef.current?.focus(); }, []);
 
 	return (
 		<motion.div
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
 			exit={{ opacity: 0 }}
-			className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start justify-center p-4 md:p-8"
+			className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center p-4 md:pt-16"
 			onClick={onClose}
 		>
 			<motion.div
-				initial={{ opacity: 0, y: 12, scale: 0.98 }}
+				initial={{ opacity: 0, y: -16, scale: 0.97 }}
 				animate={{ opacity: 1, y: 0, scale: 1 }}
-				exit={{ opacity: 0, y: 12, scale: 0.98 }}
+				exit={{ opacity: 0, y: -8, scale: 0.97 }}
 				onClick={(e) => e.stopPropagation()}
-				className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden"
+				className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden"
 			>
-				<div className="p-4 border-b border-gray-100">
-					<div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-						<Search className="w-4 h-4 text-gray-400" />
+				{/* Search input */}
+				<div className="p-3 border-b border-gray-100">
+					<div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5">
+						<Search className="w-4 h-4 text-gray-400 shrink-0" />
 						<input
-							autoFocus
+							ref={inputRef}
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
-							placeholder="Search all content..."
+							placeholder="Search or jump to a view..."
 							className="w-full bg-transparent outline-none text-[13px] text-gray-700 placeholder-gray-400"
+							onKeyDown={(e) => {
+								if (e.key === "Escape") onClose();
+								if (e.key === "Enter" && filteredCommands.length > 0 && contentResults.length === 0) filteredCommands[0]?.action?.();
+							}}
 						/>
-						<button
-							onClick={onClose}
-							className="text-[11px] text-gray-400 hover:text-gray-600"
-						>
-							Esc
-						</button>
+						<kbd className="text-[10px] text-gray-300 border border-gray-200 rounded px-1.5 py-0.5 bg-white shrink-0">Esc</kbd>
 					</div>
 				</div>
-				<div className="max-h-[70vh] overflow-y-auto p-3 flex flex-col gap-2">
-					{result.length === 0 && (
-						<div className="text-center py-12 text-gray-400 text-[12px]">
-							No content found
+
+				<div className="max-h-[60vh] overflow-y-auto">
+					{/* Commands / Navigation */}
+					{filteredCommands.length > 0 && (
+						<div className="py-1.5">
+							<div className="px-4 py-1.5 text-[9px] font-mono uppercase tracking-widest text-gray-400">
+								{query ? "Commands" : "Navigation — press key to jump"}
+							</div>
+							{filteredCommands.map((cmd) => (
+								<button
+									key={cmd.label}
+									onClick={cmd.action}
+									className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+								>
+									<span className="text-base w-6 text-center shrink-0">{cmd.icon}</span>
+									<span className="flex-1 text-[12.5px] text-gray-700">{cmd.label}</span>
+									{cmd.shortcut && (
+										<kbd className="text-[9px] font-mono text-gray-400 border border-gray-200 rounded px-1.5 py-0.5 bg-gray-50">{cmd.shortcut}</kbd>
+									)}
+								</button>
+							))}
 						</div>
 					)}
-					{result.map((item) => {
-						const p = PLATFORMS[item.platform] || {};
-						const project = projects.find((x) => x.id === item.project);
-						return (
-							<button
-								key={item.id}
-								onClick={() => onPick(item)}
-								className="w-full text-left border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition-colors"
-							>
-								<div className="flex items-center gap-2 mb-1">
-									<span className="text-[13px]">{item.thumb || "✏️"}</span>
-									<p className="text-[12.5px] font-semibold text-gray-800 truncate">
-										{item.title}
-									</p>
-									<span
-										className="ml-auto text-[9px] px-1.5 py-0.5 rounded"
-										style={{ background: p.bg, color: p.hex || "#6b7280" }}
+
+					{/* Content results */}
+					{contentResults.length > 0 && (
+						<div className="py-1.5 border-t border-gray-100">
+							<div className="px-4 py-1.5 text-[9px] font-mono uppercase tracking-widest text-gray-400">Content</div>
+							{contentResults.map((item) => {
+								const p = PLATFORMS[item.platform] || {};
+								const project = projects.find((x) => x.id === item.project);
+								return (
+									<button
+										key={item.id}
+										onClick={() => onPick(item)}
+										className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors flex items-center gap-3"
 									>
-										{p.label || item.platform}
-									</span>
-								</div>
-								<p className="text-[11px] text-gray-500 truncate">
-									{item.caption || "No caption"}
-								</p>
-								<div className="mt-1.5 flex items-center gap-2 text-[10px] text-gray-400">
-									<span>{item.date}</span>
-									<span>•</span>
-									<span>{item.time}</span>
-									<span>•</span>
-									<span>{STATUSES[item.status]?.label || item.status}</span>
-									{project?.name && (
-										<>
-											<span>•</span>
-											<span>{project.name}</span>
-										</>
-									)}
-								</div>
-							</button>
-						);
-					})}
+										<span className="text-base shrink-0">{item.thumb || "✏️"}</span>
+										<div className="flex-1 min-w-0">
+											<p className="text-[12px] font-semibold text-gray-800 truncate">{item.title}</p>
+											<p className="text-[10px] text-gray-400 truncate">{item.date} · {STATUSES[item.status]?.label}{project ? ` · ${project.name}` : ""}</p>
+										</div>
+										<span className="text-[9px] px-1.5 py-0.5 rounded shrink-0" style={{ background: p.bg, color: p.hex || "#6b7280" }}>{p.label || item.platform}</span>
+									</button>
+								);
+							})}
+						</div>
+					)}
+
+					{query && filteredCommands.length === 0 && contentResults.length === 0 && (
+						<div className="text-center py-10 text-gray-400 text-[12px]">No results for "{query}"</div>
+					)}
+				</div>
+
+				{/* Footer */}
+				<div className="border-t border-gray-100 px-4 py-2.5 flex items-center gap-4 flex-wrap bg-gray-50/50">
+					{[
+						{ keys: ["⌘", "K"], desc: "Open" },
+						{ keys: ["↵"], desc: "Select" },
+						{ keys: ["Esc"], desc: "Close" },
+					].map((s) => (
+						<div key={s.desc} className="flex items-center gap-1">
+							{s.keys.map((k) => (
+								<kbd key={k} className="text-[9px] font-mono text-gray-400 border border-gray-200 rounded px-1.5 py-0.5 bg-white">{k}</kbd>
+							))}
+							<span className="text-[10px] text-gray-400 ml-0.5">{s.desc}</span>
+						</div>
+					))}
 				</div>
 			</motion.div>
 		</motion.div>
@@ -2213,7 +2566,9 @@ function MotionDropdown({
 										setQuery("");
 									}}
 									className={`w-full text-left px-3 py-2 text-[12px] hover:bg-gray-50 transition-colors ${
-										o.value === value ? "bg-orange-50 text-orange-600" : "text-gray-600"
+										o.value === value
+											? "bg-orange-50 text-orange-600"
+											: "text-gray-600"
 									}`}
 								>
 									{o.label}
@@ -2232,7 +2587,9 @@ function IntegrationsModal({ onClose, connected, onToggle }) {
 	const list = useMemo(() => {
 		const q = query.trim().toLowerCase();
 		if (!q) return PL;
-		return PL.filter((p) => p.label.toLowerCase().includes(q) || p.id.includes(q));
+		return PL.filter(
+			(p) => p.label.toLowerCase().includes(q) || p.id.includes(q),
+		);
 	}, [query]);
 
 	return (
@@ -2252,7 +2609,9 @@ function IntegrationsModal({ onClose, connected, onToggle }) {
 			>
 				<div className="p-5 border-b border-gray-100 flex items-center justify-between">
 					<div>
-						<h3 className="text-[15px] font-bold tracking-tight">Integrations</h3>
+						<h3 className="text-[15px] font-bold tracking-tight">
+							Integrations
+						</h3>
 						<p className="text-[11px] text-gray-400 mt-1">
 							Connect publishing and distribution channels
 						</p>
@@ -2278,22 +2637,39 @@ function IntegrationsModal({ onClose, connected, onToggle }) {
 				<div className="p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 max-h-[70vh] overflow-y-auto">
 					{list.map((p) => {
 						const isOn = !!connected[p.id];
-						const info = PLATFORM_INTEGRATION_INFO[p.id] || PLATFORM_INTEGRATION_INFO.default;
+						const info =
+							PLATFORM_INTEGRATION_INFO[p.id] ||
+							PLATFORM_INTEGRATION_INFO.default;
 						return (
-							<div key={p.id} className="border border-gray-100 rounded-xl p-3 flex flex-col gap-2">
+							<div
+								key={p.id}
+								className="border border-gray-100 rounded-xl p-3 flex flex-col gap-2"
+							>
 								<div className="flex items-center gap-2">
-									<div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: p.bg, color: p.hex }}>
+									<div
+										className="w-8 h-8 rounded-lg flex items-center justify-center"
+										style={{ background: p.bg, color: p.hex }}
+									>
 										<p.Icon />
 									</div>
 									<div className="min-w-0">
-										<div className="text-[12px] font-semibold text-gray-700 truncate">{p.label}</div>
-										<div className="text-[10px] text-gray-400">{info.method}</div>
+										<div className="text-[12px] font-semibold text-gray-700 truncate">
+											{p.label}
+										</div>
+										<div className="text-[10px] text-gray-400">
+											{info.method}
+										</div>
 									</div>
-									<span className="ml-auto text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{info.time}</span>
+									<span className="ml-auto text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+										{info.time}
+									</span>
 								</div>
 								<div className="flex flex-wrap gap-1">
 									{info.scopes.slice(0, 3).map((s) => (
-										<span key={s} className="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">
+										<span
+											key={s}
+											className="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500"
+										>
 											{s}
 										</span>
 									))}
@@ -2324,12 +2700,395 @@ function IntegrationsModal({ onClose, connected, onToggle }) {
 	);
 }
 
+// ─── ANALYTICS VIEW ───────────────────────────────────────────────────────────
+function AnalyticsView({ items }) {
+	const today = new Date();
+	const todayStr = today.toISOString().split("T")[0];
+
+	const last14 = useMemo(() =>
+		Array.from({ length: 14 }, (_, i) => {
+			const d = new Date(today);
+			d.setDate(d.getDate() - (13 - i));
+			return d.toISOString().split("T")[0];
+		}), []);
+
+	const perDay = last14.map((date) => ({
+		date,
+		count: items.filter((i) => i.date === date).length,
+		label: new Date(date + "T12:00").getDate(),
+	}));
+	const maxDay = Math.max(...perDay.map((d) => d.count), 1);
+
+	const platCounts = useMemo(() => {
+		const m = {};
+		items.forEach((i) => { m[i.platform] = (m[i.platform] || 0) + 1; });
+		return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 8);
+	}, [items]);
+	const totalPlat = platCounts.reduce((s, [, c]) => s + c, 0) || 1;
+
+	const statusCounts = useMemo(() => {
+		const m = { idea: 0, draft: 0, scheduled: 0, published: 0 };
+		items.forEach((i) => { if (m[i.status] !== undefined) m[i.status]++; });
+		return m;
+	}, [items]);
+
+	const hourCounts = useMemo(() => {
+		const a = Array(24).fill(0);
+		items.forEach((i) => {
+			const h = parseInt((i.time || "0:00").split(":")[0]);
+			if (!isNaN(h) && h >= 0 && h < 24) a[h]++;
+		});
+		return a;
+	}, [items]);
+	const maxHour = Math.max(...hourCounts, 1);
+	const peakHour = hourCounts.indexOf(Math.max(...hourCounts));
+
+	const published = statusCounts.published;
+	const scheduled = statusCounts.scheduled;
+	const thisWeek = items.filter((i) => {
+		const diff = (new Date(todayStr) - new Date(i.date)) / 86400000;
+		return diff >= 0 && diff < 7;
+	}).length;
+
+	return (
+		<div className="flex flex-col gap-4">
+			{/* Summary cards */}
+			<div className="grid grid-cols-4 gap-3">
+				{[
+					{ label: "Total Posts", value: items.length, icon: "📝", color: "#6366f1" },
+					{ label: "Published", value: published, icon: "✅", color: "#16a34a" },
+					{ label: "Scheduled", value: scheduled, icon: "📅", color: "#2563eb" },
+					{ label: "This Week", value: thisWeek, icon: "🔥", color: "#e8590c" },
+				].map((s) => (
+					<div key={s.label} className="bg-white border border-gray-100 rounded-xl p-4">
+						<div className="flex items-center gap-2 mb-2">
+							<span className="text-base">{s.icon}</span>
+							<span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{s.label}</span>
+						</div>
+						<div className="text-[28px] font-bold tracking-tight" style={{ color: s.color }}>{s.value}</div>
+					</div>
+				))}
+			</div>
+
+			<div className="grid grid-cols-[1fr_280px] gap-4">
+				{/* Posts per day bar chart */}
+				<div className="bg-white border border-gray-100 rounded-xl p-5">
+					<h3 className="text-[13px] font-bold tracking-tight mb-1">Posts — last 14 days</h3>
+					<p className="text-[11px] text-gray-400 mb-4">Orange bar = today</p>
+					<div className="flex items-end gap-1 h-28">
+						{perDay.map(({ date, count, label }, idx) => {
+							const h = count > 0 ? Math.max(Math.round((count / maxDay) * 100), 8) : 0;
+							const isT = date === todayStr;
+							return (
+								<div key={date} className="flex-1 flex flex-col items-center gap-1 group">
+									<div className="relative w-full flex flex-col justify-end" style={{ height: 96 }}>
+										{count > 0 && (
+											<div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[8px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">{count}</div>
+										)}
+										<motion.div
+											initial={{ height: 0 }}
+											animate={{ height: `${h}%` }}
+											transition={{ duration: 0.5, delay: idx * 0.03 }}
+											className="w-full rounded-t-sm"
+											style={{ background: isT ? "#e8590c" : count > 0 ? "#fed7aa" : "#f3f4f6" }}
+										/>
+									</div>
+									<span className="text-[8px] font-mono text-gray-300">{label}</span>
+								</div>
+							);
+						})}
+					</div>
+				</div>
+
+				{/* Platform distribution */}
+				<div className="bg-white border border-gray-100 rounded-xl p-5">
+					<h3 className="text-[13px] font-bold tracking-tight mb-4">By platform</h3>
+					{platCounts.length === 0 ? (
+						<div className="text-center py-8 text-gray-300 text-[12px]">No data yet</div>
+					) : (
+						<div className="flex flex-col gap-2.5">
+							{platCounts.map(([pid, count], i) => {
+								const p = PLATFORMS[pid];
+								const pct = Math.round((count / totalPlat) * 100);
+								return (
+									<div key={pid} className="flex items-center gap-2">
+										<div className="w-5 h-5 rounded flex items-center justify-center shrink-0" style={{ background: p?.bg, color: p?.hex }}>
+											{p?.Icon && <p.Icon />}
+										</div>
+										<span className="text-[10.5px] text-gray-500 w-[72px] truncate">{p?.label || pid}</span>
+										<div className="flex-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+											<motion.div
+												initial={{ width: 0 }}
+												animate={{ width: `${pct}%` }}
+												transition={{ duration: 0.6, delay: i * 0.05 }}
+												className="h-full rounded-full"
+												style={{ background: p?.hex || "#6b7280" }}
+											/>
+										</div>
+										<span className="text-[10px] font-mono text-gray-400 w-7 text-right">{count}</span>
+									</div>
+								);
+							})}
+						</div>
+					)}
+				</div>
+			</div>
+
+			<div className="grid grid-cols-2 gap-4">
+				{/* Status pipeline */}
+				<div className="bg-white border border-gray-100 rounded-xl p-5">
+					<h3 className="text-[13px] font-bold tracking-tight mb-4">Content pipeline</h3>
+					<div className="flex flex-col gap-3">
+						{Object.entries(STATUSES).map(([key, s]) => {
+							const count = statusCounts[key] || 0;
+							const pct = items.length > 0 ? Math.round((count / items.length) * 100) : 0;
+							return (
+								<div key={key} className="flex items-center gap-3">
+									<span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.dot }} />
+									<span className="text-[11px] text-gray-600 w-20">{s.label}</span>
+									<div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+										<motion.div
+											initial={{ width: 0 }}
+											animate={{ width: `${pct}%` }}
+											transition={{ duration: 0.7 }}
+											className="h-full rounded-full"
+											style={{ background: s.dot }}
+										/>
+									</div>
+									<span className="text-[12px] font-bold w-6 text-right" style={{ color: s.color }}>{count}</span>
+								</div>
+							);
+						})}
+					</div>
+				</div>
+
+				{/* Posting hour heatmap */}
+				<div className="bg-white border border-gray-100 rounded-xl p-5">
+					<h3 className="text-[13px] font-bold tracking-tight mb-4">Best posting hours</h3>
+					<div className="flex items-end gap-px h-20 mb-2">
+						{hourCounts.map((count, h) => {
+							const pct = count > 0 ? Math.max(Math.round((count / maxHour) * 100), 6) : 0;
+							const isPeak = count === Math.max(...hourCounts) && count > 0;
+							return (
+								<div key={h} className="flex-1 group" title={`${h}:00 — ${count} posts`}>
+									<motion.div
+										initial={{ height: 0 }}
+										animate={{ height: `${pct}%` }}
+										transition={{ duration: 0.4, delay: h * 0.01 }}
+										className="w-full rounded-t-sm"
+										style={{ background: isPeak ? "#e8590c" : count > 0 ? "#fed7aa" : "#f3f4f6" }}
+									/>
+								</div>
+							);
+						})}
+					</div>
+					<div className="flex justify-between text-[7px] font-mono text-gray-300">
+						{[0, 6, 12, 18, 23].map((h) => <span key={h}>{h}h</span>)}
+					</div>
+					{Math.max(...hourCounts) > 0 && (
+						<p className="text-[10.5px] text-gray-500 mt-2.5">
+							<span className="font-semibold text-orange-500">Peak:</span> {peakHour}:00 – {peakHour + 1}:00 ({hourCounts[peakHour]} posts)
+						</p>
+					)}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+// ─── HOME DASHBOARD ───────────────────────────────────────────────────────────
+function HomeView({ items, team, projects, onSelect, onNavigate }) {
+	const today = new Date();
+	const todayStr = today.toISOString().split("T")[0];
+	const hour = today.getHours();
+	const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+	const todayItems = useMemo(() =>
+		items.filter((i) => i.date === todayStr).sort((a, b) => a.time.localeCompare(b.time)),
+		[items, todayStr]);
+
+	const upcoming = useMemo(() =>
+		items
+			.filter((i) => i.date > todayStr && i.status !== "published")
+			.sort((a, b) => new Date(a.date + " " + a.time) - new Date(b.date + " " + b.time))
+			.slice(0, 5),
+		[items, todayStr]);
+
+	const published = items.filter((i) => i.status === "published").length;
+	const scheduled = items.filter((i) => i.status === "scheduled").length;
+
+	const weekStart = new Date(today);
+	weekStart.setDate(today.getDate() - today.getDay());
+	const weekDays = Array.from({ length: 7 }, (_, i) => {
+		const d = new Date(weekStart);
+		d.setDate(d.getDate() + i);
+		const ds = d.toISOString().split("T")[0];
+		return { ds, day: DAYS[d.getDay()], date: d.getDate(), posts: items.filter((i) => i.date === ds) };
+	});
+
+	return (
+		<div className="flex flex-col gap-4">
+			{/* Welcome banner */}
+			<div className="bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 rounded-2xl p-5 text-white relative overflow-hidden">
+				<div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/10 pointer-events-none" />
+				<div className="absolute -right-2 -bottom-10 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
+				<div className="relative z-10">
+					<p className="text-[11px] font-mono uppercase tracking-widest opacity-75 mb-0.5">{greeting}</p>
+					<h2 className="text-[20px] font-bold tracking-tight mb-3">Alex Morgan 👋</h2>
+					<div className="grid grid-cols-4 gap-2">
+						{[
+							{ label: "Total", value: items.length },
+							{ label: "Published", value: published },
+							{ label: "Scheduled", value: scheduled },
+							{ label: "Today", value: todayItems.length },
+						].map((s) => (
+							<div key={s.label} className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-2">
+								<div className="text-[22px] font-bold leading-none">{s.value}</div>
+								<div className="text-[9px] opacity-75 uppercase tracking-wider mt-0.5">{s.label}</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+
+			<div className="grid grid-cols-[1fr_280px] gap-4">
+				<div className="flex flex-col gap-4">
+					{/* Week strip */}
+					<div className="bg-white border border-gray-100 rounded-xl p-4">
+						<h3 className="text-[13px] font-bold tracking-tight mb-3">This week</h3>
+						<div className="grid grid-cols-7 gap-1.5">
+							{weekDays.map(({ ds, day, date, posts }) => {
+								const isT = ds === todayStr;
+								return (
+									<div key={ds} className={`rounded-xl p-2 text-center ${isT ? "bg-orange-50 border border-orange-200" : "bg-gray-50 border border-transparent"}`}>
+										<div className={`text-[8px] font-mono uppercase tracking-wider mb-0.5 ${isT ? "text-orange-500" : "text-gray-400"}`}>{day}</div>
+										<div className={`text-[15px] font-bold mb-1.5 ${isT ? "text-orange-500" : "text-gray-700"}`}>{date}</div>
+										{posts.length > 0 ? (
+											<div className="flex flex-col gap-0.5 items-center">
+												{posts.slice(0, 3).map((p) => (
+													<div key={p.id} className="w-4 h-1 rounded-full" style={{ background: PLATFORMS[p.platform]?.hex || "#ccc" }} />
+												))}
+												{posts.length > 3 && <div className="text-[7px] text-gray-400">+{posts.length - 3}</div>}
+											</div>
+										) : (
+											<div className="w-4 h-1 rounded-full bg-gray-200 mx-auto" />
+										)}
+									</div>
+								);
+							})}
+						</div>
+					</div>
+
+					{/* Today's posts */}
+					<div className="bg-white border border-gray-100 rounded-xl p-4">
+						<div className="flex items-center justify-between mb-3">
+							<h3 className="text-[13px] font-bold tracking-tight">Today's content</h3>
+							<span className="text-[10px] font-mono text-gray-400">{todayItems.length} scheduled</span>
+						</div>
+						{todayItems.length === 0 ? (
+							<div className="text-center py-8 text-gray-300">
+								<div className="text-3xl mb-2">📭</div>
+								<p className="text-[12px] mb-2">Nothing scheduled today</p>
+								<button onClick={() => onNavigate("compose")} className="text-[11px] text-orange-500 hover:text-orange-600 font-semibold">+ Create a post</button>
+							</div>
+						) : (
+							<div className="flex flex-col gap-2">
+								{todayItems.map((item) => {
+									const p = PLATFORMS[item.platform] || {};
+									return (
+										<motion.div
+											key={item.id}
+											whileHover={{ x: 2 }}
+											onClick={() => onSelect(item)}
+											className="flex items-center gap-3 p-2.5 border border-gray-100 rounded-lg hover:border-gray-200 hover:bg-gray-50 cursor-pointer transition-all"
+										>
+											<div className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0" style={{ background: p.bg }}>{item.thumb}</div>
+											<div className="flex-1 min-w-0">
+												<p className="text-[12px] font-semibold truncate tracking-tight">{item.title}</p>
+												<div className="flex items-center gap-1.5 mt-0.5">
+													<span className="text-[9.5px] font-mono text-gray-400">⏰ {item.time}</span>
+													<PBadge platform={item.platform} />
+												</div>
+											</div>
+											<SBadge status={item.status} />
+										</motion.div>
+									);
+								})}
+							</div>
+						)}
+					</div>
+				</div>
+
+				<div className="flex flex-col gap-4">
+					{/* Upcoming */}
+					<div className="bg-white border border-gray-100 rounded-xl p-4">
+						<div className="flex items-center justify-between mb-3">
+							<h3 className="text-[13px] font-bold tracking-tight">Upcoming</h3>
+							<button onClick={() => onNavigate("calendar")} className="text-[10px] text-orange-500 hover:text-orange-600">View all →</button>
+						</div>
+						{upcoming.length === 0 ? (
+							<div className="text-center py-8 text-gray-300 text-[12px]">No upcoming posts</div>
+						) : (
+							<div className="flex flex-col gap-2">
+								{upcoming.map((item) => {
+									const daysUntil = Math.ceil((new Date(item.date) - new Date(todayStr)) / 86400000);
+									return (
+										<div
+											key={item.id}
+											onClick={() => onSelect(item)}
+											className="flex items-center gap-2 p-2.5 border border-gray-100 rounded-lg hover:border-gray-200 cursor-pointer transition-all"
+										>
+											<span className="text-base shrink-0">{item.thumb}</span>
+											<div className="flex-1 min-w-0">
+												<p className="text-[11px] font-semibold truncate">{item.title}</p>
+												<div className="flex items-center gap-1 mt-0.5">
+													<PBadge platform={item.platform} />
+													<span className="text-[9px] font-mono text-gray-400">in {daysUntil}d</span>
+												</div>
+											</div>
+										</div>
+									);
+								})}
+							</div>
+						)}
+					</div>
+
+					{/* Quick actions */}
+					<div className="bg-white border border-gray-100 rounded-xl p-4">
+						<p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">Quick actions</p>
+						<div className="grid grid-cols-2 gap-2">
+							{[
+								{ label: "New post", icon: "✏️", view: "compose" },
+								{ label: "Calendar", icon: "📅", view: "calendar" },
+								{ label: "Kanban", icon: "⬛", view: "kanban" },
+								{ label: "Analytics", icon: "📊", view: "analytics" },
+								{ label: "Ideas", icon: "💡", view: "ideas" },
+								{ label: "Team", icon: "👥", view: "teams" },
+							].map((a) => (
+								<button
+									key={a.label}
+									onClick={() => onNavigate(a.view)}
+									className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-gray-100 text-[11px] text-gray-600 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 transition-all text-left"
+								>
+									<span>{a.icon}</span>{a.label}
+								</button>
+							))}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 const VIEWS = [
+	{ id: "home", icon: "🏠", label: "Home" },
 	{ id: "calendar", icon: "📅", label: "Calendar" },
 	{ id: "list", icon: "☰", label: "List" },
 	{ id: "grid", icon: "⊞", label: "Grid" },
 	{ id: "kanban", icon: "⬛", label: "Kanban" },
+	{ id: "analytics", icon: "📊", label: "Analytics" },
 	{ id: "compose", icon: "✏️", label: "Compose" },
 	{ id: "ideas", icon: "💡", label: "Ideas" },
 	{ id: "teams", icon: "👥", label: "Teams" },
@@ -2338,8 +3097,9 @@ const CONTENT_VIEWS = ["calendar", "list", "grid", "kanban"];
 
 export default function ContentOS() {
 	const [items, setItems] = useState(SEED_CONTENT);
+	const [team, setTeam] = useState(SEED_TEAM);
 	const [projects, setProjects] = useState(PROJECTS);
-	const [view, setView] = useState("calendar");
+	const [view, setView] = useState("home");
 	const [filterPf, setFilterPf] = useState("all");
 	const [filterSt, setFilterSt] = useState("all");
 	const [search, setSearch] = useState("");
@@ -2347,6 +3107,7 @@ export default function ContentOS() {
 	const [theme, setTheme] = useState("light");
 	const [isMobile, setIsMobile] = useState(false);
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+	const [sidebarMini, setSidebarMini] = useState(false);
 	const [connected, setConnected] = useState({
 		instagram: true,
 		youtube: true,
@@ -2357,6 +3118,9 @@ export default function ContentOS() {
 	const [showAccountModal, setShowAccountModal] = useState(false);
 	const [showIntegrationsModal, setShowIntegrationsModal] = useState(false);
 	const [showSearchModal, setShowSearchModal] = useState(false);
+	const [showExport, setShowExport] = useState(false);
+	const [bulkMode, setBulkMode] = useState(false);
+	const [bulkSelected, setBulkSelected] = useState(new Set());
 
 	const BLANK = {
 		title: "",
@@ -2369,6 +3133,7 @@ export default function ContentOS() {
 		tags: [],
 		thumb: "✏️",
 		project: activeProject,
+		assigneeId: SEED_TEAM.find((m) => m.active)?.id || null,
 	};
 
 	const filtered = useMemo(
@@ -2400,12 +3165,61 @@ export default function ContentOS() {
 		[filtered, connected],
 	);
 
+	const toggleBulkSelect = (id) =>
+		setBulkSelected((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
+	const bulkStatusChange = (status) => {
+		bulkSelected.forEach((id) => statusChange(id, status));
+		setBulkSelected(new Set());
+		setBulkMode(false);
+	};
+	const bulkDeleteSelected = () => {
+		bulkSelected.forEach((id) => deleteItem(id));
+		setBulkSelected(new Set());
+		setBulkMode(false);
+	};
+	const exportData = (format) => {
+		const data = filtered;
+		if (format === "csv") {
+			const headers = ["id", "title", "platform", "type", "status", "date", "time", "caption", "tags"];
+			const rows = data.map((i) =>
+				headers.map((h) =>
+					h === "tags"
+						? `"${(i[h] || []).join(";")}"`
+						: `"${String(i[h] ?? "").replace(/"/g, '""')}"`
+				).join(",")
+			);
+			const blob = new Blob([[headers.join(","), ...rows].join("\n")], { type: "text/csv" });
+			const a = document.createElement("a");
+			a.href = URL.createObjectURL(blob);
+			a.download = "content-export.csv";
+			a.click();
+		} else {
+			const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+			const a = document.createElement("a");
+			a.href = URL.createObjectURL(blob);
+			a.download = "content-export.json";
+			a.click();
+		}
+		setShowExport(false);
+	};
+
 	const saveItem = (u) => {
 		const normalized = {
 			...u,
 			id: u?.id ?? uid(),
 			title: u?.title?.trim() || "Untitled post",
 			project: Number(u?.project ?? activeProject),
+			assigneeId: Number(
+				u?.assigneeId ??
+					team.find((m) => m.active)?.id ??
+					SEED_TEAM[0]?.id ??
+					1,
+			),
 		};
 
 		setItems((p) =>
@@ -2447,13 +3261,41 @@ export default function ContentOS() {
 		if (isMobile) setSidebarOpen(false);
 	}, [view, isMobile]);
 
+	useEffect(() => {
+		const handler = (e) => {
+			if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+				e.preventDefault();
+				setShowSearchModal((s) => !s);
+				return;
+			}
+			if (e.key === "Escape") {
+				setBulkMode(false);
+				setBulkSelected(new Set());
+				return;
+			}
+			if (e.target.matches("input, textarea, [contenteditable]")) return;
+			if (e.key === "n") setView("compose");
+			if (e.key === "h") setView("home");
+			if (e.key === "a") setView("analytics");
+			if (e.key === "c") setView("calendar");
+			if (e.key === "l") setView("list");
+			if (e.key === "k") setView("kanban");
+			if (e.key === "i") setView("ideas");
+			if (e.key === "t") setView("teams");
+		};
+		window.addEventListener("keydown", handler);
+		return () => window.removeEventListener("keydown", handler);
+	}, []);
+
 	const activePrj = projects.find((p) => p.id === activeProject) || projects[0];
 	const isContentView = CONTENT_VIEWS.includes(view);
 	const VIEW_TITLES = {
+		home: "Home",
 		calendar: "Content Scheduler",
 		list: "Content List",
 		grid: "Grid View",
 		kanban: "Kanban Board",
+		analytics: "Analytics",
 		compose: "Content Composer",
 		ideas: "Ideas Generator",
 		teams: "Team & Roles",
@@ -2462,7 +3304,9 @@ export default function ContentOS() {
 	return (
 		<div
 			className={`contentos-shell ${theme === "dark" ? "contentos-dark" : ""} flex h-screen overflow-hidden font-sans ${
-				theme === "dark" ? "bg-zinc-900 text-zinc-100" : "bg-gray-50 text-gray-900"
+				theme === "dark"
+					? "bg-zinc-900 text-zinc-100"
+					: "bg-gray-50 text-gray-900"
 			}`}
 			style={{
 				fontFamily:
@@ -2484,7 +3328,7 @@ export default function ContentOS() {
 			)}
 			{/* ── SIDEBAR ── */}
 			<aside
-				className={`w-64 shrink-0 border-r flex flex-col overflow-y-auto fixed md:static top-0 left-0 bottom-0 z-50 transform transition-transform duration-200 ${
+				className={`${sidebarMini ? "w-14" : "w-64"} shrink-0 border-r flex flex-col overflow-y-auto fixed md:static top-0 left-0 bottom-0 z-50 transform transition-all duration-200 ${
 					theme === "dark"
 						? "bg-zinc-900 border-zinc-800"
 						: "bg-white border-gray-100"
@@ -2492,129 +3336,153 @@ export default function ContentOS() {
 			>
 				{/* Logo */}
 				<div
-					className={`flex items-center gap-2 px-3 py-4 border-b ${
+					className={`flex items-center ${sidebarMini ? "justify-center px-2" : "gap-2 px-3"} py-4 border-b ${
 						theme === "dark" ? "border-zinc-800" : "border-gray-100"
 					}`}
 				>
 					<div className="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
 						C
 					</div>
-					<div>
-						<p className="text-[13px] font-bold tracking-tight leading-none">
-							ContentOS
-						</p>
-					</div>
+					{!sidebarMini && (
+						<div className="flex-1 min-w-0">
+							<p className="text-[13px] font-bold tracking-tight leading-none">ContentOS</p>
+						</div>
+					)}
+					{!isMobile && (
+						<button
+							onClick={() => setSidebarMini((s) => !s)}
+							className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0 text-[11px]"
+							title={sidebarMini ? "Expand sidebar" : "Collapse sidebar"}
+						>
+							{sidebarMini ? "›" : "‹"}
+						</button>
+					)}
 				</div>
 
 				{/* Project switcher */}
-				<ProjectSwitcher
-					projects={projects}
-					active={activeProject}
-					onChange={(id) => {
-						setActiveProj(id);
-					}}
-					onAddProject={() => setShowAddProject(true)}
-				/>
+				{!sidebarMini ? (
+					<ProjectSwitcher
+						projects={projects}
+						active={activeProject}
+						onChange={(id) => { setActiveProj(id); }}
+						onAddProject={() => setShowAddProject(true)}
+					/>
+				) : (
+					<div className="px-2 py-2 border-b border-gray-100">
+						<button
+							onClick={() => setSidebarMini(false)}
+							className="w-full flex items-center justify-center h-8 rounded-lg hover:bg-gray-100 transition-colors text-base"
+							title={projects.find((p) => p.id === activeProject)?.name}
+						>
+							{projects.find((p) => p.id === activeProject)?.emoji || "📁"}
+						</button>
+					</div>
+				)}
 
-				{/* Views */}
-				<div className="px-2 pt-3 pb-1">
-					<p className="text-[9px] font-mono uppercase tracking-widest text-gray-400 px-2 mb-1">
-						Views
-					</p>
+				{/* Views nav */}
+				<div className={`${sidebarMini ? "px-1.5 py-2" : "px-2 pt-3 pb-1"} border-b ${theme === "dark" ? "border-zinc-800" : "border-gray-100"}`}>
+					{!sidebarMini && (
+						<p className="text-[9px] font-mono uppercase tracking-widest text-gray-400 px-2 mb-1">Views</p>
+					)}
 					{VIEWS.map((v) => (
 						<button
 							key={v.id}
 							onClick={() => setView(v.id)}
-							className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[12.5px] transition-all ${view === v.id ? "bg-gray-100 text-gray-900 font-semibold" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"}`}
+							title={sidebarMini ? v.label : undefined}
+							className={`w-full flex items-center ${sidebarMini ? "justify-center px-0 py-2" : "gap-2 px-2 py-1.5"} rounded-lg text-[12.5px] transition-all ${view === v.id ? "bg-gray-100 text-gray-900 font-semibold" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"}`}
 						>
-							<span className="w-4 text-center text-[13px]">{v.icon}</span>
-							{v.label}
+							<span className={`${sidebarMini ? "text-[16px]" : "w-4 text-[13px]"} text-center shrink-0`}>{v.icon}</span>
+							{!sidebarMini && v.label}
 						</button>
 					))}
 				</div>
 
 				{/* Platforms */}
-				<div className="px-2 pt-3 pb-3 flex-1">
-					<div className="flex items-center justify-between px-2 mb-1">
-						<p className="text-[9px] font-mono uppercase tracking-widest text-gray-400">
-							Connected
-						</p>
-						<span className="text-[8px] font-mono bg-green-100 text-green-600 px-1.5 py-0.5 rounded">
-							{Object.keys(connected).length}/{PL.length}
-						</span>
+				{!sidebarMini ? (
+					<div className="px-2 pt-3 pb-3 flex-1">
+						<div className="flex items-center justify-between px-2 mb-1">
+							<p className="text-[9px] font-mono uppercase tracking-widest text-gray-400">Connected</p>
+							<span className="text-[8px] font-mono bg-green-100 text-green-600 px-1.5 py-0.5 rounded">
+								{Object.keys(connected).length}/{PL.length}
+							</span>
+						</div>
+						{PL.filter((p) => !!connected[p.id]).map((p) => {
+							const isOn = !!connected[p.id];
+							return (
+								<div key={p.id} className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors">
+									<div className="w-5 h-5 rounded flex items-center justify-center shrink-0" style={{ background: p.bg, color: p.hex }}>
+										<p.Icon />
+									</div>
+									<span
+										className="text-[11.5px] text-gray-500 flex-1 cursor-pointer hover:text-gray-700 transition-colors"
+										onClick={() => setFilterPf(filterPf === p.id ? "all" : p.id)}
+									>
+										{p.label}
+									</span>
+									<button
+										onClick={() => disconnectPl(p.id)}
+										className={`text-[8px] font-mono px-1.5 py-0.5 rounded transition-all ${isOn ? "bg-green-100 text-green-600 border border-green-200 hover:bg-red-100 hover:text-red-500 hover:border-red-200" : "bg-gray-100 text-gray-400 border border-gray-200 hover:bg-gray-200"}`}
+									>
+										✓ on
+									</button>
+								</div>
+							);
+						})}
+						<button
+							onClick={() => setShowIntegrationsModal(true)}
+							className="w-full mt-2 text-[11px] font-semibold border border-gray-200 rounded-lg px-2 py-2 text-gray-600 hover:bg-gray-50 transition-colors"
+						>
+							Open Integrations
+						</button>
 					</div>
-					{PL.filter((p) => !!connected[p.id]).map((p) => {
-						const isOn = !!connected[p.id];
-						return (
+				) : (
+					<div className="flex-1 px-1.5 py-2">
+						{PL.filter((p) => !!connected[p.id]).slice(0, 6).map((p) => (
 							<div
 								key={p.id}
-								className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-50 transition-colors"
+								className="flex items-center justify-center py-1.5 cursor-pointer rounded-lg hover:bg-gray-50 transition-colors"
+								title={p.label}
+								onClick={() => setFilterPf(filterPf === p.id ? "all" : p.id)}
 							>
-								<div
-									className="w-5 h-5 rounded flex items-center justify-center shrink-0"
-									style={{ background: p.bg, color: p.hex }}
-								>
+								<div className="w-5 h-5 rounded flex items-center justify-center" style={{ background: p.bg, color: p.hex }}>
 									<p.Icon />
 								</div>
-								<span
-									className="text-[11.5px] text-gray-500 flex-1 cursor-pointer hover:text-gray-700 transition-colors"
-									onClick={() => setFilterPf(filterPf === p.id ? "all" : p.id)}
-								>
-									{p.label}
-								</span>
-								<button
-									onClick={() => disconnectPl(p.id)}
-									className={`text-[8px] font-mono px-1.5 py-0.5 rounded transition-all ${isOn ? "bg-green-100 text-green-600 border border-green-200 hover:bg-red-100 hover:text-red-500 hover:border-red-200" : "bg-gray-100 text-gray-400 border border-gray-200 hover:bg-gray-200"}`}
-								>
-									✓ on
-								</button>
 							</div>
-						);
-					})}
-					<button
-						onClick={() => setShowIntegrationsModal(true)}
-						className="w-full mt-2 text-[11px] font-semibold border border-gray-200 rounded-lg px-2 py-2 text-gray-600 hover:bg-gray-50 transition-colors"
-					>
-						Open Integrations
-					</button>
-				</div>
-				<div
-					className={`p-2 border-t space-y-2 ${
-						theme === "dark" ? "border-zinc-800" : "border-gray-100"
-					}`}
-				>
+						))}
+					</div>
+				)}
+
+				{/* Bottom */}
+				<div className={`p-2 border-t space-y-2 ${theme === "dark" ? "border-zinc-800" : "border-gray-100"}`}>
 					<button
 						onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-						className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-[12px] transition-colors ${
-							theme === "dark"
-								? "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
-								: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+						title={sidebarMini ? (theme === "dark" ? "Light mode" : "Dark mode") : undefined}
+						className={`w-full flex items-center ${sidebarMini ? "justify-center px-0" : "justify-between px-3"} py-2 rounded-lg text-[12px] transition-colors ${
+							theme === "dark" ? "bg-zinc-800 text-zinc-200 hover:bg-zinc-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
 						}`}
 					>
-						<span>{theme === "dark" ? "☀️ Light mode" : "🌙 Dark mode"}</span>
-						<span className="text-[10px] font-mono uppercase">
-							{theme === "dark" ? "Dark" : "Light"}
-						</span>
+						<span>{theme === "dark" ? "☀️" : "🌙"}</span>
+						{!sidebarMini && (
+							<>
+								<span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+								<span className="text-[10px] font-mono uppercase">{theme === "dark" ? "Dark" : "Light"}</span>
+							</>
+						)}
 					</button>
 					<button
 						onClick={() => setShowAccountModal(true)}
-						className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
-							theme === "dark"
-								? "hover:bg-zinc-800 text-zinc-200"
-								: "hover:bg-gray-50 text-gray-700"
+						title={sidebarMini ? "Alex Morgan" : undefined}
+						className={`w-full flex items-center ${sidebarMini ? "justify-center" : "gap-2 px-3"} py-2 rounded-lg text-left transition-colors ${
+							theme === "dark" ? "hover:bg-zinc-800 text-zinc-200" : "hover:bg-gray-50 text-gray-700"
 						}`}
 					>
-						<img
-							src="https://i.pravatar.cc/100?img=68"
-							alt="Alex Morgan"
-							className="w-8 h-8 rounded-full object-cover"
-						/>
-						<div className="min-w-0">
-							<p className="text-[12px] font-semibold truncate">Alex Morgan</p>
-							<p className="text-[10px] text-gray-400 truncate">
-								alex@contentos.app
-							</p>
-						</div>
+						<img src="https://i.pravatar.cc/100?img=68" alt="Alex Morgan" className="w-8 h-8 rounded-full object-cover shrink-0" />
+						{!sidebarMini && (
+							<div className="min-w-0">
+								<p className="text-[12px] font-semibold truncate">Alex Morgan</p>
+								<p className="text-[10px] text-gray-400 truncate">alex@contentos.app</p>
+							</div>
+						)}
 					</button>
 				</div>
 			</aside>
@@ -2645,15 +3513,19 @@ export default function ContentOS() {
 					<h1 className="text-[16px] font-bold tracking-tight flex-1 min-w-[80px]">
 						{VIEW_TITLES[view]}
 					</h1>
+
+					{/* Search / Command Palette trigger */}
+					<button
+						onClick={() => setShowSearchModal(true)}
+						className="flex items-center gap-1.5 bg-gray-100 border border-gray-200 rounded-lg px-2.5 py-1.5 text-[12px] text-gray-500 hover:bg-gray-50 transition-colors"
+					>
+						<Search className="w-3.5 h-3.5 text-gray-400" />
+						<span className="hidden sm:inline">Search</span>
+						<kbd className="hidden sm:inline text-[9px] font-mono text-gray-300 border border-gray-200 rounded px-1 py-0.5 bg-white">⌘K</kbd>
+					</button>
+
 					{isContentView && (
 						<>
-							<button
-								onClick={() => setShowSearchModal(true)}
-								className="flex items-center gap-1.5 bg-gray-100 border border-gray-200 rounded-lg px-2.5 py-1.5 text-[12px] text-gray-500 hover:bg-gray-50 transition-colors"
-							>
-								<Search className="w-4 h-4 text-gray-400" />
-								<span>Search content</span>
-							</button>
 							<MotionDropdown
 								value={filterPf}
 								onChange={setFilterPf}
@@ -2678,7 +3550,56 @@ export default function ContentOS() {
 							/>
 						</>
 					)}
-					
+
+					{/* Bulk select toggle — list/grid only */}
+					{(view === "list" || view === "grid") && (
+						<button
+							onClick={() => { setBulkMode((b) => !b); setBulkSelected(new Set()); }}
+							className={`flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1.5 rounded-lg border transition-colors ${
+								bulkMode
+									? "bg-orange-100 text-orange-600 border-orange-200"
+									: "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+							}`}
+						>
+							{bulkMode ? "✕ Cancel" : "☑ Select"}
+						</button>
+					)}
+
+					{/* Export dropdown */}
+					{isContentView && (
+						<div className="relative">
+							<button
+								onClick={() => setShowExport((s) => !s)}
+								className="flex items-center gap-1 text-[12px] font-semibold px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+							>
+								↓ Export
+							</button>
+							<AnimatePresence>
+								{showExport && (
+									<motion.div
+										initial={{ opacity: 0, y: 4, scale: 0.97 }}
+										animate={{ opacity: 1, y: 0, scale: 1 }}
+										exit={{ opacity: 0, y: 4, scale: 0.97 }}
+										className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden w-36"
+									>
+										<button
+											onClick={() => exportData("csv")}
+											className="w-full text-left px-3 py-2.5 text-[12px] text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
+										>
+											<span>📄</span> Export CSV
+										</button>
+										<button
+											onClick={() => exportData("json")}
+											className="w-full text-left px-3 py-2.5 text-[12px] text-gray-600 hover:bg-gray-50 transition-colors border-t border-gray-100 flex items-center gap-2"
+										>
+											<span>📦</span> Export JSON
+										</button>
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</div>
+					)}
+
 					{isContentView && (
 						<button
 							onClick={() => setSelected({ ...BLANK })}
@@ -2689,37 +3610,25 @@ export default function ContentOS() {
 					)}
 				</div>
 
-				{/* Stats bar */}
-				{isContentView && (
-					<div className="flex gap-px bg-gray-100 border-b border-gray-100 shrink-0">
-						{[
-							{ n: stats.total, l: "Posts", c: "#141414" },
-							{ n: stats.scheduled, l: "Scheduled", c: "#2563eb" },
-							{ n: stats.published, l: "Published", c: "#16a34a" },
-							{ n: stats.drafts, l: "Drafts", c: "#d97706" },
-							{ n: stats.conn, l: "Connected", c: "#e8590c" },
-						].map((s) => (
-							<div
-								key={s.l}
-								className="flex-1 bg-white px-4 py-2.5 min-w-[70px]"
-							>
-								<span
-									className="block text-[20px] font-bold tracking-tight leading-none"
-									style={{ color: s.c }}
-								>
-									{s.n}
-								</span>
-								<span className="block text-[9px] font-mono uppercase tracking-widest text-gray-400 mt-0.5">
-									{s.l}
-								</span>
-							</div>
-						))}
-					</div>
-				)}
-
 				{/* Content area */}
 				<div className="flex-1 p-4 overflow-y-auto">
 					<AnimatePresence mode="wait">
+						{view === "home" && (
+							<motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+								<HomeView
+									items={filtered}
+									team={team}
+									projects={projects}
+									onSelect={setSelected}
+									onNavigate={setView}
+								/>
+							</motion.div>
+						)}
+						{view === "analytics" && (
+							<motion.div key="analytics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+								<AnalyticsView items={filtered} />
+							</motion.div>
+						)}
 						{view === "calendar" && (
 							<motion.div
 								key="cal"
@@ -2727,7 +3636,11 @@ export default function ContentOS() {
 								animate={{ opacity: 1 }}
 								exit={{ opacity: 0 }}
 							>
-								<CalendarView items={filtered} onSelect={setSelected} />
+								<CalendarView
+									items={filtered}
+									onSelect={setSelected}
+									team={team}
+								/>
 							</motion.div>
 						)}
 						{view === "list" && (
@@ -2748,8 +3661,11 @@ export default function ContentOS() {
 									<ContentCard
 										key={item.id}
 										item={item}
-										onClick={setSelected}
+										onClick={bulkMode ? (it) => toggleBulkSelect(it.id) : setSelected}
 										compact={false}
+										team={team}
+										bulkMode={bulkMode}
+										isSelected={bulkSelected.has(item.id)}
 									/>
 								))}
 							</motion.div>
@@ -2772,8 +3688,11 @@ export default function ContentOS() {
 									<ContentCard
 										key={item.id}
 										item={item}
-										onClick={setSelected}
+										onClick={bulkMode ? (it) => toggleBulkSelect(it.id) : setSelected}
 										compact={true}
+										team={team}
+										bulkMode={bulkMode}
+										isSelected={bulkSelected.has(item.id)}
 									/>
 								))}
 							</motion.div>
@@ -2789,6 +3708,7 @@ export default function ContentOS() {
 									items={filtered}
 									onSelect={setSelected}
 									onStatusChange={statusChange}
+									team={team}
 								/>
 							</motion.div>
 						)}
@@ -2799,7 +3719,11 @@ export default function ContentOS() {
 								animate={{ opacity: 1 }}
 								exit={{ opacity: 0 }}
 							>
-								<ComposerView onSave={saveItem} activeProject={activeProject} />
+								<ComposerView
+									onSave={saveItem}
+									activeProject={activeProject}
+									team={team}
+								/>
 							</motion.div>
 						)}
 						{view === "ideas" && (
@@ -2824,12 +3748,50 @@ export default function ContentOS() {
 								animate={{ opacity: 1 }}
 								exit={{ opacity: 0 }}
 							>
-								<TeamsView />
+								<TeamsView team={team} setTeam={setTeam} />
 							</motion.div>
 						)}
 					</AnimatePresence>
 				</div>
 			</div>
+
+			{/* ── FLOATING BULK ACTION BAR ── */}
+			<AnimatePresence>
+				{bulkMode && bulkSelected.size > 0 && (
+					<motion.div
+						initial={{ opacity: 0, y: 24 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: 24 }}
+						className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white border border-gray-200 rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3 flex-wrap"
+					>
+						<span className="text-[12px] font-semibold text-gray-700 shrink-0">{bulkSelected.size} selected</span>
+						<div className="w-px h-4 bg-gray-200 shrink-0" />
+						{Object.entries(STATUSES).map(([key, s]) => (
+							<button
+								key={key}
+								onClick={() => bulkStatusChange(key)}
+								className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition-colors hover:opacity-80"
+								style={{ color: s.color, borderColor: s.bg, background: s.bg }}
+							>
+								→ {s.label}
+							</button>
+						))}
+						<div className="w-px h-4 bg-gray-200 shrink-0" />
+						<button
+							onClick={bulkDeleteSelected}
+							className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-red-200 text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
+						>
+							🗑 Delete
+						</button>
+						<button
+							onClick={() => { setBulkMode(false); setBulkSelected(new Set()); }}
+							className="text-[11px] text-gray-400 hover:text-gray-600 ml-1"
+						>
+							✕
+						</button>
+					</motion.div>
+				)}
+			</AnimatePresence>
 
 			{/* ── MODALS ── */}
 			<AnimatePresence>
@@ -2843,6 +3805,7 @@ export default function ContentOS() {
 							setSelected(null);
 						}}
 						projects={projects}
+						team={team}
 					/>
 				)}
 			</AnimatePresence>
@@ -2876,20 +3839,23 @@ export default function ContentOS() {
 					<IntegrationsModal
 						onClose={() => setShowIntegrationsModal(false)}
 						connected={connected}
-						onToggle={(id, isOn) =>
-							isOn ? disconnectPl(id) : connectPl(id)
-						}
+						onToggle={(id, isOn) => (isOn ? disconnectPl(id) : connectPl(id))}
 					/>
 				)}
 			</AnimatePresence>
 			<AnimatePresence>
 				{showSearchModal && (
-					<SearchModal
+					<CommandPalette
 						items={items}
 						projects={projects}
+						team={team}
 						onClose={() => setShowSearchModal(false)}
 						onPick={(item) => {
 							setSelected(item);
+							setShowSearchModal(false);
+						}}
+						onNavigate={(v) => {
+							setView(v);
 							setShowSearchModal(false);
 						}}
 					/>
